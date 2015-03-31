@@ -64,6 +64,7 @@
 @property (assign, nonatomic) CGFloat tokenYAdjustment;
 @property (copy, nonatomic) NSDictionary *separatorAttributes;
 
+@property (assign, nonatomic) UIReturnKeyType inputTextFieldReturnKeyType;
 @property (assign, nonatomic) UIKeyboardType inputTextFieldKeyboardType;
 @property (assign, nonatomic) UITextAutocorrectionType autocorrectionType;
 @property (assign, nonatomic) UITextAutocapitalizationType autocapitalizationType;

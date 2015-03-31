@@ -471,6 +471,7 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
     if (!_inputTextField) {
         _inputTextField = [[VENBackspaceTextField alloc] init];
         [_inputTextField setKeyboardType:self.inputTextFieldKeyboardType];
+		_inputTextField.returnKeyType = self.inputTextFieldReturnKeyType;
         _inputTextField.textColor = self.inputTextFieldTextColor;
 		_inputTextField.font = self.inputTextFieldFont;
         _inputTextField.autocorrectionType = self.autocorrectionType;
@@ -496,6 +497,12 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
 {
     _inputTextFieldKeyboardType = inputTextFieldKeyboardType;
     [self.inputTextField setKeyboardType:self.inputTextFieldKeyboardType];
+}
+
+- (void)setInputTextFieldReturnKeyType:(UIReturnKeyType)inputTextFieldReturnKeyType
+{
+	_inputTextFieldReturnKeyType = inputTextFieldReturnKeyType;
+	self.inputTextField.returnKeyType = self.inputTextFieldReturnKeyType;
 }
 
 - (void)setAutocapitalizationType:(UITextAutocapitalizationType)autocapitalizationType
@@ -597,13 +604,17 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
     if ([self.delegate respondsToSelector:@selector(tokenField:didEnterText:)]) {
-        if ([textField.text length]) {
-            [self.delegate tokenField:self didEnterText:textField.text];
-        }
+		[self.delegate tokenField:self didEnterText:textField.text];
     }
     return NO;
 }
-
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
+	if (textField == self.inputTextField) {
+		// shouldn't need to do this but you do
+		textField.tintColor = self.tintColor;
+	}
+	return YES;
+}
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
     if (textField == self.inputTextField) {
