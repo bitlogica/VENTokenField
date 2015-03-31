@@ -22,12 +22,9 @@
 
 #import <UIKit/UIKit.h>
 
-@interface VENToken : UIView
+@interface VENToken : UILabel
 
-@property (assign, nonatomic) BOOL highlighted;
 @property (copy, nonatomic) void (^didTapTokenBlock) (void);
 @property (strong, nonatomic) UIColor *colorScheme;
-
-- (void)setTitleText:(NSString *)text;
-
++ (UIEdgeInsets)padding;
 @end

@@ -58,13 +58,19 @@
 @property (assign, nonatomic) CGFloat verticalInset;
 @property (assign, nonatomic) CGFloat horizontalInset;
 @property (assign, nonatomic) CGFloat tokenPadding;
+@property (assign, nonatomic) CGFloat toLabelPadding;
 @property (assign, nonatomic) CGFloat minInputWidth;
+@property (assign, nonatomic) CGFloat inputTextFieldYAdjustment;
+@property (assign, nonatomic) CGFloat tokenYAdjustment;
 
 @property (assign, nonatomic) UIKeyboardType inputTextFieldKeyboardType;
 @property (assign, nonatomic) UITextAutocorrectionType autocorrectionType;
 @property (assign, nonatomic) UITextAutocapitalizationType autocapitalizationType;
 @property (assign, nonatomic) UIView *inputTextFieldAccessoryView;
 @property (strong, nonatomic) UIColor *toLabelTextColor;
+@property (strong, nonatomic) UIFont *toLabelFont;
+@property (strong, nonatomic) UIFont *tokenFont;
+@property (strong, nonatomic) UIFont *inputTextFieldFont;
 @property (strong, nonatomic) NSString *toLabelText;
 @property (strong, nonatomic) UIColor *inputTextFieldTextColor;
 

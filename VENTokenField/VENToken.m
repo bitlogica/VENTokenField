@@ -24,15 +24,15 @@
 
 @interface VENToken ()
 @property (strong, nonatomic) UITapGestureRecognizer *tapGestureRecognizer;
-@property (strong, nonatomic) IBOutlet UILabel *titleLabel;
-@property (strong, nonatomic) IBOutlet UIView *backgroundView;
 @end
 
-@implementation VENToken
+@implementation VENToken {
+	CAShapeLayer *_backgroundLayer;
+}
 
 - (id)initWithFrame:(CGRect)frame
 {
-    self = [[[NSBundle mainBundle] loadNibNamed:NSStringFromClass([self class]) owner:self options:nil] firstObject];
+	self = [super initWithFrame:frame];
     if (self) {
         [self setUpInit];
     }
@@ -41,38 +41,55 @@
 
 - (void)setUpInit
 {
-    self.backgroundView.layer.cornerRadius = 5;
+	self.clipsToBounds = YES;
+	self.userInteractionEnabled = YES;
+    self.layer.cornerRadius = 5;
     self.tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(didTapToken:)];
     self.colorScheme = [UIColor blueColor];
-    self.titleLabel.textColor = self.colorScheme;
-    [self addGestureRecognizer:self.tapGestureRecognizer];
+    self.textColor = self.colorScheme;
+	[self addGestureRecognizer:self.tapGestureRecognizer];
 }
 
-- (void)setTitleText:(NSString *)text
+- (void)setText:(NSString *)text
 {
-    self.titleLabel.text = text;
-    self.titleLabel.textColor = self.colorScheme;
-    [self.titleLabel sizeToFit];
-    self.frame = CGRectMake(CGRectGetMinX(self.frame), CGRectGetMinY(self.frame), CGRectGetMaxX(self.titleLabel.frame) + 3, CGRectGetHeight(self.frame));
-    [self.titleLabel sizeToFit];
+	[super setText:text];
+    self.textColor = self.colorScheme;
+    [self sizeToFit];
+    self.frame = CGRectMake(CGRectGetMinX(self.frame), CGRectGetMinY(self.frame), CGRectGetMaxX(self.frame) + 3, CGRectGetHeight(self.frame));
+}
+- (CGSize)sizeThatFits:(CGSize)size {
+	CGSize s = [super sizeThatFits:size];
+	s.width += VENToken.padding.left + VENToken.padding.right;
+	return s;
+}
+
+- (void)drawTextInRect:(CGRect)rect {
+	[super drawTextInRect:UIEdgeInsetsInsetRect(rect, [VENToken padding])];
+}
+
+
++ (UIEdgeInsets)padding {
+	return UIEdgeInsetsMake(0, 4, 0, 4);
 }
 
 - (void)setHighlighted:(BOOL)highlighted
 {
-    _highlighted = highlighted;
-    UIColor *textColor = highlighted ? [UIColor whiteColor] : self.colorScheme;
-    UIColor *backgroundColor = highlighted ? self.colorScheme : [UIColor clearColor];
-    self.titleLabel.textColor = textColor;
-    self.backgroundView.backgroundColor = backgroundColor;
+	[super setHighlighted:highlighted];
+    UIColor *textColor = self.highlighted ? [UIColor whiteColor] : self.colorScheme;
+    UIColor *backgroundColor = self.highlighted ? self.colorScheme : [UIColor clearColor];
+    self.textColor = textColor;
+    self.backgroundColor = backgroundColor;
 }
 
+- (void)layoutSubviews {
+	
+}
 - (void)setColorScheme:(UIColor *)colorScheme
 {
     _colorScheme = colorScheme;
-    self.titleLabel.textColor = self.colorScheme;
-    [self setHighlighted:_highlighted];
+    self.textColor = self.colorScheme;
+    [self setHighlighted:self.highlighted];
 }
-
 
 #pragma mark - Private
 

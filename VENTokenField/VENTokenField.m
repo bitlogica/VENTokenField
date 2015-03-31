@@ -87,15 +87,19 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
     // Set up default values.
     _autocorrectionType = UITextAutocorrectionTypeNo;
     _autocapitalizationType = UITextAutocapitalizationTypeSentences;
+
     self.maxHeight = VENTokenFieldDefaultMaxHeight;
     self.verticalInset = VENTokenFieldDefaultVerticalInset;
     self.horizontalInset = VENTokenFieldDefaultHorizontalInset;
     self.tokenPadding = VENTokenFieldDefaultTokenPadding;
     self.minInputWidth = VENTokenFieldDefaultMinInputWidth;
+	self.toLabelPadding = VENTokenFieldDefaultToLabelPadding;
     self.colorScheme = [UIColor blueColor];
     self.toLabelTextColor = [UIColor colorWithRed:112/255.0f green:124/255.0f blue:124/255.0f alpha:1.0f];
     self.inputTextFieldTextColor = [UIColor colorWithRed:38/255.0f green:39/255.0f blue:41/255.0f alpha:1.0f];
-    
+	self.toLabelFont = [UIFont fontWithName:@"HelveticaNeue" size:15.5];
+	self.tokenFont = [UIFont fontWithName:@"HelveticaNeue" size:15.5];
+	self.inputTextFieldFont = [UIFont fontWithName:@"HelveticaNeue" size:15.5];
     // Accessing bare value to avoid kicking off a premature layout run.
     _toLabelText = NSLocalizedString(@"To:", nil);
 
@@ -141,6 +145,23 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
     self.toLabel.textColor = _toLabelTextColor;
 }
 
+- (void)setToLabelFont:(UIFont *)toLabelFont
+{
+	_toLabelFont = toLabelFont;
+	self.toLabel.font = _toLabelFont;
+}
+
+- (void)setInputTextFieldFont:(UIFont *)inputTextFieldFont {
+	_inputTextFieldFont = inputTextFieldFont;
+	self.inputTextField.font = inputTextFieldFont;
+}
+
+- (void)setTokenFont:(UIFont *)tokenFont {
+	_tokenFont = tokenFont;
+	for (VENToken *token in self.tokens) {
+		token.font = _tokenFont;
+	}
+}
 - (void)setToLabelText:(NSString *)toLabelText
 {
     _toLabelText = toLabelText;
@@ -208,17 +229,31 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
     self.tokens = [NSMutableArray array];
 
     CGFloat currentX = 0;
-    CGFloat currentY = 0;
+	CGFloat currentY = 0;
 
     [self layoutToLabelInView:self.scrollView origin:CGPointZero currentX:&currentX];
     [self layoutTokensWithCurrentX:&currentX currentY:&currentY];
     [self layoutInputTextFieldWithCurrentX:&currentX currentY:&currentY];
-
+	
     if (shouldAdjustFrame) {
         [self adjustHeightForCurrentY:currentY];
     }
-
-    [self.scrollView setContentSize:CGSizeMake(self.scrollView.contentSize.width, currentY + [self heightForToken])];
+	
+	[self alignFirstRowBaselineWithToLabel];
+	BOOL inputFieldIsFirstInRow = self.inputTextField.left <= self.toLabel.right + self.toLabelPadding + 10;
+	if (!inputFieldIsFirstInRow || self.tokens.count == 0) {
+		UILabel *referenceLabel = self.tokens.lastObject ?: self.toLabel;
+		CGRect fieldFrame = self.inputTextField.frame;
+		[self alignTextFieldBaseline:self.inputTextField toBaseline:referenceLabel];
+		fieldFrame.origin.y = self.inputTextField.frame.origin.y;
+		fieldFrame.size.height = self.inputTextField.frame.size.height;
+		self.inputTextField.frame = fieldFrame;
+	} else {
+		CGRect fieldFrame = self.inputTextField.frame;
+		fieldFrame.origin.y -= 4;
+		self.inputTextField.frame = fieldFrame;
+	}
+	[self.scrollView setContentSize:CGSizeMake(self.scrollView.contentSize.width, currentY + [self heightForToken])];
 
     [self updateInputTextField];
 
@@ -227,6 +262,42 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
     } else {
         [self focusInputTextField];
     }
+}
+
+- (void)alignFirstRowBaselineWithToLabel {
+	for (VENToken *token in self.tokens) {
+		if (CGRectGetMinY(token.frame) == 0) {
+			[self alignLabelBaseline:token toBaseline:self.toLabel];
+		}
+	}
+}
+
+- (void)alignTextFieldBaseline:(UITextField *)textField toBaseline:(UILabel *)majorLabel {
+	[textField sizeToFit];
+	[majorLabel sizeToFit];
+	CGRect majorLabelFrameInMinorLabelSuperview = [majorLabel convertRect:majorLabel.bounds toView:textField.superview];
+	CGRect changedFrame = textField.frame;
+	
+	const CGFloat scale = UIScreen.mainScreen.scale;
+	const CGFloat majorLabelBaselineInMinorLabelSuperView = CGRectGetMaxY(majorLabelFrameInMinorLabelSuperview) + majorLabel.font.descender;
+	const CGFloat minorLabelBaselineInOwnView = CGRectGetHeight(textField.bounds) + textField.font.descender;
+	changedFrame.origin.y = ceil((majorLabelBaselineInMinorLabelSuperView - minorLabelBaselineInOwnView) * scale) / scale;
+	
+	textField.frame = changedFrame;
+}
+
+- (void)alignLabelBaseline:(UILabel *)minorLabel toBaseline:(UILabel *)majorLabel {
+	[minorLabel sizeToFit];
+	[majorLabel sizeToFit];
+	CGRect majorLabelFrameInMinorLabelSuperview = [majorLabel convertRect:majorLabel.bounds toView:minorLabel.superview];
+	CGRect changedFrame = minorLabel.frame;
+	
+	const CGFloat scale = UIScreen.mainScreen.scale;
+	const CGFloat majorLabelBaselineInMinorLabelSuperView = CGRectGetMaxY(majorLabelFrameInMinorLabelSuperview) + majorLabel.font.descender;
+	const CGFloat minorLabelBaselineInOwnView = CGRectGetHeight(minorLabel.bounds) + minorLabel.font.descender;
+	changedFrame.origin.y = ceil((majorLabelBaselineInMinorLabelSuperView - minorLabelBaselineInOwnView) * scale) / scale;
+	
+	minorLabel.frame = changedFrame;
 }
 
 - (BOOL)isCollapsed
@@ -252,14 +323,14 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
 {
     CGFloat inputTextFieldWidth = self.scrollView.contentSize.width - *currentX;
     if (inputTextFieldWidth < self.minInputWidth) {
-        inputTextFieldWidth = self.scrollView.contentSize.width;
-        *currentY += [self heightForToken];
-        *currentX = 0;
+		*currentX = self.toLabel.right + self.toLabelPadding + VENToken.padding.left;
+		inputTextFieldWidth = self.scrollView.contentSize.width - *currentX;
+		*currentY += [self heightForToken];
     }
 
     VENBackspaceTextField *inputTextField = self.inputTextField;
     inputTextField.text = @"";
-    inputTextField.frame = CGRectMake(*currentX, *currentY + 1, inputTextFieldWidth, [self heightForToken] - 1);
+    inputTextField.frame = CGRectMake(*currentX, *currentY + 1 + self.inputTextFieldYAdjustment, inputTextFieldWidth, [self heightForToken] - 1);
     inputTextField.tintColor = self.colorScheme;
     [self.scrollView addSubview:inputTextField];
 }
@@ -267,7 +338,7 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
 - (void)layoutCollapsedLabelWithCurrentX:(CGFloat *)currentX
 {
     UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(*currentX, CGRectGetMinY(self.toLabel.frame), self.width - *currentX - self.horizontalInset, self.toLabel.height)];
-    label.font = [UIFont fontWithName:@"HelveticaNeue" size:15.5];
+	label.font = self.tokenFont;
     label.text = [self collapsedText];
     label.textColor = self.colorScheme;
     label.minimumScaleFactor = 5./label.font.pointSize;
@@ -290,15 +361,17 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
     self.toLabel.frame = newFrame;
     
     [view addSubview:self.toLabel];
-    *currentX += self.toLabel.hidden ? CGRectGetMinX(self.toLabel.frame) : CGRectGetMaxX(self.toLabel.frame) + VENTokenFieldDefaultToLabelPadding;
+    *currentX += self.toLabel.hidden ? CGRectGetMinX(self.toLabel.frame) : CGRectGetMaxX(self.toLabel.frame) + self.toLabelPadding;
 }
 
 - (void)layoutTokensWithCurrentX:(CGFloat *)currentX currentY:(CGFloat *)currentY
 {
+	UILabel *referenceLabel = self.toLabel;
     for (NSUInteger i = 0; i < [self numberOfTokens]; i++) {
         NSString *title = [self titleForTokenAtIndex:i];
         VENToken *token = [[VENToken alloc] init];
         token.colorScheme = self.colorScheme;
+        token.font = self.tokenFont;
 
         __weak VENToken *weakToken = token;
         __weak VENTokenField *weakSelf = self;
@@ -306,14 +379,15 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
             [weakSelf didTapToken:weakToken];
         };
 
-        [token setTitleText:[NSString stringWithFormat:@"%@,", title]];
+		token.text = [NSString stringWithFormat:@"%@,", title];
         [self.tokens addObject:token];
 
         if (*currentX + token.width <= self.scrollView.contentSize.width) { // token fits in current line
             token.frame = CGRectMake(*currentX, *currentY, token.width, token.height);
         } else {
+			referenceLabel = nil;
             *currentY += token.height;
-            *currentX = 0;
+			*currentX = self.toLabel.right + self.toLabelPadding;
             CGFloat tokenWidth = token.width;
             if (tokenWidth > self.scrollView.contentSize.width) { // token is wider than max width
                 tokenWidth = self.scrollView.contentSize.width;
@@ -359,7 +433,7 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
     if (!_toLabel) {
         _toLabel = [[UILabel alloc] initWithFrame:CGRectZero];
         _toLabel.textColor = self.toLabelTextColor;
-        _toLabel.font = [UIFont fontWithName:@"HelveticaNeue" size:15.5];
+		_toLabel.font = self.toLabelFont;
         _toLabel.x = 0;
         [_toLabel sizeToFit];
         [_toLabel setHeight:[self heightForToken]];
@@ -393,7 +467,7 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
         _inputTextField = [[VENBackspaceTextField alloc] init];
         [_inputTextField setKeyboardType:self.inputTextFieldKeyboardType];
         _inputTextField.textColor = self.inputTextFieldTextColor;
-        _inputTextField.font = [UIFont fontWithName:@"HelveticaNeue" size:15.5];
+		_inputTextField.font = self.inputTextFieldFont;
         _inputTextField.autocorrectionType = self.autocorrectionType;
         _inputTextField.autocapitalizationType = self.autocapitalizationType;
         _inputTextField.tintColor = self.colorScheme;
