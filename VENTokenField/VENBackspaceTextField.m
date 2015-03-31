@@ -35,4 +35,22 @@
     return YES;
 }
 
+- (void)setPlaceholderColor:(UIColor *)placeholderColor {
+	_placeholderColor = placeholderColor;
+	[self setNeedsDisplay];
+}
+
+- (void)drawPlaceholderInRect:(CGRect)rect {
+	if(self.placeholderColor == nil) {
+		[super drawPlaceholderInRect:rect];
+		return;
+	}
+	
+	NSAttributedString *string = [[NSAttributedString alloc] initWithString:self.placeholder attributes:@{
+			NSForegroundColorAttributeName: self.placeholderColor,
+			NSFontAttributeName: self.font
+		}];
+	[string drawInRect:rect];
+}
+
 @end

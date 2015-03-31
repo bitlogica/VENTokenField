@@ -32,5 +32,6 @@
 @interface VENBackspaceTextField : UITextField
 
 @property (weak, nonatomic) id<VENBackspaceTextFieldDelegate> delegate;
+@property (strong, nonatomic) UIColor *placeholderColor;
 
 @end

@@ -471,6 +471,7 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
     if (!_inputTextField) {
         _inputTextField = [[VENBackspaceTextField alloc] init];
         [_inputTextField setKeyboardType:self.inputTextFieldKeyboardType];
+		_inputTextField.placeholderColor = self.placeholderColor;
 		_inputTextField.returnKeyType = self.inputTextFieldReturnKeyType;
         _inputTextField.textColor = self.inputTextFieldTextColor;
 		_inputTextField.font = self.inputTextFieldFont;
@@ -484,6 +485,11 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
         [_inputTextField addTarget:self action:@selector(inputTextFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
     }
     return _inputTextField;
+}
+
+- (void)setPlaceholderColor:(UIColor *)placeholderColor {
+	_placeholderColor = placeholderColor;
+	self.inputTextField.placeholderColor = _placeholderColor;
 }
 
 - (void)setAutocorrectionType:(UITextAutocorrectionType)autocorrectionType
