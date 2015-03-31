@@ -53,10 +53,14 @@
 - (void)setText:(NSString *)text
 {
 	[super setText:text];
-    self.textColor = self.colorScheme;
-    [self sizeToFit];
-    self.frame = CGRectMake(CGRectGetMinX(self.frame), CGRectGetMinY(self.frame), CGRectGetMaxX(self.frame) + 3, CGRectGetHeight(self.frame));
+
 }
+
+- (void)setAttributedText:(NSAttributedString *)attributedText {
+    self.textColor = self.colorScheme;
+	[super setAttributedText:attributedText];
+}
+
 - (CGSize)sizeThatFits:(CGSize)size {
 	CGSize s = [super sizeThatFits:size];
 	s.width += VENToken.padding.left + VENToken.padding.right;
@@ -79,16 +83,16 @@
     UIColor *backgroundColor = self.highlighted ? self.colorScheme : [UIColor clearColor];
     self.textColor = textColor;
     self.backgroundColor = backgroundColor;
-}
-
-- (void)layoutSubviews {
-	
+	if (!highlighted) {
+		self.attributedText = self.unhighlightedAttributedText;
+	}
 }
 - (void)setColorScheme:(UIColor *)colorScheme
 {
     _colorScheme = colorScheme;
     self.textColor = self.colorScheme;
-    [self setHighlighted:self.highlighted];
+	self.attributedText = self.attributedText;
+	[self setHighlighted:self.highlighted];
 }
 
 #pragma mark - Private

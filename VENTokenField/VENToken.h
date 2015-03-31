@@ -27,4 +27,5 @@
 @property (copy, nonatomic) void (^didTapTokenBlock) (void);
 @property (strong, nonatomic) UIColor *colorScheme;
 + (UIEdgeInsets)padding;
+@property (copy, nonatomic) NSAttributedString *unhighlightedAttributedText;
 @end

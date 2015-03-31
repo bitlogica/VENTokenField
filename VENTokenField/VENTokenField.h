@@ -62,6 +62,7 @@
 @property (assign, nonatomic) CGFloat minInputWidth;
 @property (assign, nonatomic) CGFloat inputTextFieldYAdjustment;
 @property (assign, nonatomic) CGFloat tokenYAdjustment;
+@property (copy, nonatomic) NSDictionary *separatorAttributes;
 
 @property (assign, nonatomic) UIKeyboardType inputTextFieldKeyboardType;
 @property (assign, nonatomic) UITextAutocorrectionType autocorrectionType;

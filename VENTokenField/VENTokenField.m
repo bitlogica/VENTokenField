@@ -379,7 +379,12 @@ static const CGFloat VENTokenFieldDefaultMaxHeight          = 150.0;
             [weakSelf didTapToken:weakToken];
         };
 
-		token.text = [NSString stringWithFormat:@"%@,", title];
+		NSMutableAttributedString *string = [[NSMutableAttributedString alloc] initWithString:title];
+		NSAttributedString *separator = [[NSAttributedString alloc] initWithString:@"," attributes:self.separatorAttributes];
+		[string appendAttributedString:separator];
+		token.unhighlightedAttributedText = string;
+		token.attributedText = string;
+		[token sizeToFit];
         [self.tokens addObject:token];
 
         if (*currentX + token.width <= self.scrollView.contentSize.width) { // token fits in current line
